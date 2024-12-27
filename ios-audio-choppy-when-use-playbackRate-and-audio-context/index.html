@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Audio Playback Bug</title>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>iOS Audio Choppy When Use PlaybackRate And AudioContext</h1>
+            
+            <section class="bug-summary">
+                <p>
+                    The audio is choppy and the playbackRate is not working when playing 2.0x audio with AudioContext on iOS devices.
+                </p>
+                <p>
+                    <strong>Environment:</strong> iPhone 15 Pro Max (iOS 18.2, Chrome 131)<br>
+                    <strong>Reference:</strong> <a href="https://bugs.webkit.org/show_bug.cgi?id=283034" target="_blank" rel="noopener noreferrer">WebKit Bug #283034</a>
+                </p>
+            </section>
+        </header>
+
+        <section class="reproduction-steps">
+            <h2>Reproduction Steps</h2>
+            <ol>
+                <li>Click "Play" button to play source audio, use "Pause" button to pause playback</li>
+                <li>Click "Play with audio element (2.0x)" button to play at 2x speed, use "Pause" button to pause playback</li>
+                <li>Click "Play with AudioContext (2.0x)" button to play at 2x speed, use "Pause" button to pause playback</li>
+                <li>Compare the playback quality, AudioContext playback will be choppy</li>
+            </ol>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label>Source Audio (1.0x):</label>
+                    <button onclick="playMusicWithAudioElement(1.0)" aria-label="Play source audio at normal speed">Play</button>
+                    <button onclick="pauseMusic()" aria-label="Pause source audio">Pause</button>
+                </div>
+
+                <div class="control-group">
+                    <label>Audio Element (2.0x):</label>
+                    <button onclick="playMusicWithAudioElement(2.0)" aria-label="Play with audio element at double speed">Play</button>
+                    <button onclick="pauseMusic()" aria-label="Pause audio">Pause</button>
+                </div>
+
+                <div class="control-group">
+                    <label>AudioContext (2.0x):</label>
+                    <button onclick="playMusicWithAudioContext(2.0)" aria-label="Play with AudioContext at double speed">Play</button>
+                    <button onclick="pauseMusic()" aria-label="Pause audio">Pause</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const audioElement = new Audio('./count.mp3');
+        audioElement.loop = true;
+        let currentPlayer = null;
+
+        function playMusicWithAudioElement(playbackRate = 1.0) {
+            if (currentPlayer) {
+                currentPlayer.pause();
+            }
+            audioElement.currentTime = 0;
+            audioElement.playbackRate = playbackRate;
+            audioElement.play();
+            currentPlayer = audioElement;
+        }
+
+        function playMusicWithAudioContext(playbackRate = 1.0) {
+            if (currentPlayer) {
+                currentPlayer.pause();
+            }
+            audioElement.pause();
+
+            const newAudioElement = new Audio('./count.mp3');
+            newAudioElement.playbackRate = playbackRate;
+            const audioContext = new AudioContext();
+            const node = audioContext.createMediaElementSource(newAudioElement);
+            const destination = audioContext.createMediaStreamDestination();
+            node.connect(destination);
+
+            const stream = destination.stream;
+            const player = document.createElement('audio');
+            player.srcObject = stream;
+            newAudioElement.play();
+            player.play();
+            currentPlayer = player;
+        }
+
+        function pauseMusic() {
+            if (currentPlayer) {
+                currentPlayer.pause();
+            }
+        }
+    </script>
+</body>
+</html>

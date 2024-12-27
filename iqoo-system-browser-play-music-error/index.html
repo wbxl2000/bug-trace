@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IQOO浏览器音频事件问题</title>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>IQOO系统浏览器播放音乐错误</h1>
+            
+            <section class="bug-summary">
+                <p>
+                    在IQOO系统浏览器中同时播放多个音频文件时，部分音频元素无法接收ontimeupdate事件。
+                </p>
+                <p>
+                    <strong>环境：</strong> IQOO系统浏览器 21.8.0，ORIGIN OS 4<br>
+                    <strong>设备：</strong> IQOO 11S(V2304A)
+                </p>
+            </section>
+        </header>
+
+        <section class="reproduction-steps">
+            <h2>复现步骤</h2>
+            <ol>
+                <li>点击下方"播放三首歌曲"按钮</li>
+                <li>观察三个音频文件的播放状态</li>
+                <li>注意某些音频文件没有接收到ontimeupdate事件</li>
+            </ol>
+
+            <div class="test-controls">
+                <button onclick="playThreeSongs()" aria-label="同时开始播放三首歌曲">播放三首歌曲</button>
+                
+                <div class="playback-status">
+                    <div class="status-group">
+                        <h3>播放状态</h3>
+                        <div class="status-container">
+                            <div class="status-item">
+                                <label>歌曲1：</label>
+                                <span id="song1"></span>
+                            </div>
+                            <div class="status-item">
+                                <label>歌曲2：</label>
+                                <span id="song2"></span>
+                            </div>
+                            <div class="status-item">
+                                <label>歌曲3：</label>
+                                <span id="song3"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="resources">
+            <h2>相关资源</h2>
+            <ul>
+                <li><a href="./iqoo.jpeg" target="_blank" rel="noopener noreferrer">截图</a></li>
+                <li><a href="./iqoo.mp4" target="_blank" rel="noopener noreferrer">视频</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <script>
+        function playThreeSongs() {
+            function playSong(logId) {
+                const player = new Audio('https://web.sdk.qcloud.com/trtc/webrtc/v5/test/qer/assets/music/bgm2.mp3');
+                player.crossOrigin = 'anonymous';
+                player.controls = true;
+                console.warn(`${logId}-player`, player);
+                const container = document.getElementById(logId);
+                player.ontimeupdate = () => {
+                    console.warn(`${logId}-currentTime: ${player.currentTime}/${player.duration}`);
+                    container.innerText = `${player.currentTime}/${player.duration}\n`;
+                };
+                player.onended = () => {
+                    console.warn(`${logId}-onended`);
+                    container.innerText = `onended\n`;
+                };
+                player.play();
+                container.innerText = `${logId}-player\n`;
+            }
+            playSong('song1');
+            playSong('song2');
+            playSong('song3');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bluetooth Headphones Audio Bug</title>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>iOS Capture Microphone Cause Bluetooth Headphone Not Working</h1>
+            
+            <section class="bug-summary">
+                <p>
+                    When capturing the microphone on iOS devices, the volume of Bluetooth headphones will stop working.
+                </p>
+                <p>
+                    <strong>Environment:</strong> iPhone 15 Pro Max (iOS 18.2, Chrome 131); iPhone 12 Pro (iOS 17.6, Chrome 131)<br>
+                    <strong>Reference:</strong> <a href="https://bugs.webkit.org/show_bug.cgi?id=285164" target="_blank" rel="noopener noreferrer">WebKit Bug #285164</a>
+                </p>
+            </section>
+        </header>
+
+        <section class="reproduction-steps">
+            <h2>Reproduction Steps</h2>
+            <ol>
+                <li>Connect Bluetooth headphones</li>
+                <li>Click "Play Music" button</li>
+                <li>Select microphone device</li>
+                <li>Click "Open Microphone" button</li>
+                <li>Observe if music switches from Bluetooth headphones to device speakers</li>
+            </ol>
+
+            <div class="controls">
+                <button onclick="playMusic()" aria-label="Play background music">Play Music</button>
+                
+                <div class="microphone-controls">
+                    <label for="micSelect">Select Microphone Device:</label>
+                    <select id="micSelect" aria-label="Microphone device selection">
+                        <option value="">Select Microphone</option>
+                    </select>
+                </div>
+                
+                <button onclick="openMic()" aria-label="Start microphone capture">Open Microphone</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let currentStream = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const initialStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                initialStream.getTracks().forEach(track => track.stop());
+                getMicrophones();
+            } catch (error) {
+                console.error('Failed to initialize microphone:', error);
+            }
+        });
+
+        async function getMicrophones() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const microphones = devices.filter(device => device.kind === 'audioinput');
+            const micSelect = document.getElementById('micSelect');
+            
+            while (micSelect.options.length > 1) {
+                micSelect.remove(1);
+            }
+            
+            microphones.forEach(mic => {
+                const option = document.createElement('option');
+                option.value = mic.deviceId;
+                option.text = mic.label || `Microphone ${micSelect.options.length}`;
+                micSelect.appendChild(option);
+            });
+        }
+
+        function playMusic() {
+            const audio = new Audio('./bgm.mp3');
+            audio.controls = true;
+            audio.autoplay = true;
+            audio.loop = true;
+            audio.play().catch(error => console.error('Failed to play music:', error));
+            document.body.appendChild(audio);
+        }
+
+        async function openMic() {
+            const micSelect = document.getElementById('micSelect');
+            const deviceId = micSelect.value;
+            
+            if (!deviceId) {
+                alert('Please select a microphone first');
+                return;
+            }
+
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        deviceId: { exact: deviceId }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to open microphone:', error);
+                alert('Failed to open microphone');
+            }
+        }
+    </script>
+</body>
+</html> 
