@@ -5,7 +5,7 @@ This is a personal collection of bug reproduction cases, designed to document an
 
 ### Online Preview & Current Cases
 
-Visit [bug-trace.pages.dev](https://bug-trace.pages.dev) to view all cases.
+Visit [bug.qer.im](https://bug.qer.im) to view all cases.
 
 ### Project Structure
 
