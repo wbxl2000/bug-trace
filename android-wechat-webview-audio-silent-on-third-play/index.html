@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安卓微信WebView连续播放音频问题</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vConsole/3.9.5/vconsole.min.js"></script>
+    <script>
+        // 初始化vConsole
+        document.addEventListener('DOMContentLoaded', function() {
+            window.vConsole = new window.VConsole();
+            console.log('vConsole 已初始化');
+        });
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        header {
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #333;
+        }
+        .bug-summary {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .reproduction-steps {
+            margin-bottom: 30px;
+        }
+        .test-controls {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0055aa;
+        }
+        .playback-status {
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .status-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+        }
+        .status-item label {
+            min-width: 80px;
+            font-weight: bold;
+        }
+        .audio-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>安卓微信WebView连续播放音频问题</h1>
+            
+            <section class="bug-summary">
+                <p>
+                    在安卓微信WebView中连续播放MP3音频文件时，到第三个音频时会出现异常：play() 方法会一直处于 pending 状态，不仅音频无声，而且播放实际上已暂停，且不会抛出任何错误事件。这与原生浏览器的表现完全不一致，原生浏览器可以正常连续播放多个音频。
+                </p>
+                <p>
+                    <strong>环境：</strong> 安卓微信WebView<br>
+                    <strong>设备：</strong> 安卓手机<br>
+                    <strong>现象：</strong> 第三个音频的 play() 方法返回的 Promise 永远处于 pending 状态，不会 resolve 也不会 reject<br>
+                    <strong>解决方法：</strong> 用户手动点击触发第三个音频的播放可以恢复正常
+                </p>
+            </section>
+        </header>
+
+        <section class="reproduction-steps">
+            <h2>复现步骤</h2>
+            <ol>
+                <li>在安卓微信WebView中打开此页面</li>
+                <li>点击下方"连续播放音频"按钮</li>
+                <li>观察播放状态，第三个音频的 play() 方法会一直处于 pending 状态</li>
+                <li>音频无声，且不会触发任何事件（onplay、ontimeupdate 等均不触发）</li>
+                <li>此时播放序列将永久等待，不会自动继续播放下一个音频</li>
+                <li>点击"手动恢复第三个音频"按钮可以恢复第三个音频的正常播放</li>
+                <li>预期行为：无需手动干预，应能自动连续播放4段音频</li>
+            </ol>
+
+            <div class="test-controls">
+                <button onclick="handleMultiPlay()" aria-label="连续播放音频">连续播放音频</button>
+                <button onclick="handleResume3()" aria-label="手动恢复第三个音频">手动恢复第三个音频</button>
+                
+                <div class="playback-status">
+                    <div class="status-group">
+                        <h3>播放状态</h3>
+                        <div class="status-container">
+                            <div class="status-item">
+                                <label>音频1：</label>
+                                <span id="audio1-status">未播放</span>
+                            </div>
+                            <div class="status-item">
+                                <label>音频2：</label>
+                                <span id="audio2-status">未播放</span>
+                            </div>
+                            <div class="status-item">
+                                <label>音频3：</label>
+                                <span id="audio3-status">未播放</span>
+                            </div>
+                            <div class="status-item">
+                                <label>音频4：</label>
+                                <span id="audio4-status">未播放</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="audio-container" id="audio-container">
+                    <!-- 音频元素将在这里动态添加 -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 音频URL列表
+        const audioUrls = [
+            './music/trtc-test-1.mp3',
+            './music/trtc-test-2.mp3',
+            './music/trtc-test-3.mp3',
+            './music/trtc-test-4.mp3'
+        ];
+        
+        // 存储音频元素的数组
+        const audioElements = [];
+        
+        // 手动恢复第三个音频播放
+        function handleResume3() {
+            if (audioElements[2]) {
+                audioElements[2].play()
+                    .then(() => console.log('第三个音频手动恢复播放成功'))
+                    .catch(error => console.error('第三个音频手动恢复播放失败:', error));
+            } else {
+                console.warn('第三个音频元素不存在');
+            }
+        }
+        
+        // 连续播放音频
+        async function handleMultiPlay() {
+            // 重置状态
+            document.getElementById('audio-container').innerHTML = '';
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`audio${i}-status`).textContent = '未播放';
+            }
+            
+            // 清空音频元素数组
+            audioElements.length = 0;
+            
+            // 依次播放音频
+            // 注意：如果某个音频播放超时，将永久等待，不会继续播放下一个音频
+            // 此时需要点击"手动恢复第三个音频"按钮来继续
+            for (let i = 0; i < audioUrls.length; i++) {
+                const audioIndex = i + 1;
+                const statusElement = document.getElementById(`audio${audioIndex}-status`);
+                statusElement.textContent = '未播放';
+                
+                // 创建音频元素
+                audioElements[i] = new Audio(audioUrls[i]);
+                audioElements[i].id = `audio-player-${audioIndex}`;
+                
+                // 添加到DOM以便查看
+                const audioContainer = document.getElementById('audio-container');
+                audioContainer.appendChild(audioElements[i]);
+                
+                // 添加事件监听
+                addLogForAudio(audioElements[i], audioIndex, statusElement);
+                
+                try {
+                    // 等待音频可以播放
+                    statusElement.textContent = '正在加载...';
+                    await preloadingAudio(audioElements[i]);
+                    
+                    // 播放音频并等待播放结束
+                    statusElement.textContent = '开始播放...';
+                    await playAudioAsync(audioElements[i], statusElement);
+                    
+                    statusElement.textContent = `播放完成 (${audioElements[i].duration.toFixed(1)}秒)`;
+                } catch (error) {
+                    console.error(`音频${audioIndex}播放出错:`, error);
+                    statusElement.textContent = `播放错误: ${error.message}`;
+                }
+            }
+            
+            console.log('所有音频播放完毕');
+        }
+        
+        // 等待音频加载完成
+        function preloadingAudio(audioElement) {
+            return new Promise(resolve => {
+                if (audioElement.readyState >= 3) {
+                    resolve();
+                } else {
+                    audioElement.oncanplay = resolve;
+                }
+            });
+        }
+        
+        // 播放音频并等待播放结束
+        function playAudioAsync(audioElement, statusElement) {
+            return new Promise((resolve, reject) => {
+                audioElement.onended = resolve;
+                
+                // 记录开始时间，用于检测 pending 状态
+                const startTime = Date.now();
+                statusElement.textContent = '尝试播放...';
+                
+                const playPromise = audioElement.play();
+                
+                // 监控 Promise 状态
+                const checkPromiseStatus = setInterval(() => {
+                    const elapsedTime = (Date.now() - startTime) / 1000;
+                    if (elapsedTime > 3 && audioElement.paused) {
+                        // 如果超过3秒还是暂停状态，可能是 pending
+                        statusElement.textContent = `播放卡住: ${elapsedTime.toFixed(1)}秒 (play方法可能处于pending状态)`;
+                        console.warn(`音频${audioElement.id}的play()方法可能处于pending状态，已经等待${elapsedTime.toFixed(1)}秒`);
+                    }
+                }, 1000);
+                
+                playPromise
+                    .then(() => {
+                        clearInterval(checkPromiseStatus);
+                        console.log(`音频 ${audioElement.src} 开始播放`);
+                    })
+                    .catch(error => {
+                        clearInterval(checkPromiseStatus);
+                        console.error(`音频播放失败:`, error);
+                        statusElement.textContent = `播放错误: ${error.message}`;
+                        reject(error);
+                    });
+            });
+        }
+        
+        // 为音频元素添加事件监听
+        function addLogForAudio(audioElement, audioIndex, statusElement) {
+            audioElement.onloadstart = () => {
+                console.log(`音频${audioIndex}开始加载`);
+                statusElement.textContent = '开始加载...';
+            };
+            
+            audioElement.onplaying = () => {
+                console.log(`音频${audioIndex}正在播放`);
+                statusElement.textContent = '正在播放...';
+            };
+            
+            audioElement.onpause = () => {
+                console.log(`音频${audioIndex}已暂停 - 当前时间: ${audioElement.currentTime.toFixed(2)}s`);
+                statusElement.textContent = `已暂停: ${audioElement.currentTime.toFixed(1)}秒`;
+            };
+            
+            audioElement.ontimeupdate = () => {
+                statusElement.textContent = `正在播放: ${audioElement.currentTime.toFixed(1)}/${audioElement.duration.toFixed(1)}秒`;
+            };
+            
+            audioElement.onwaiting = () => {
+                console.log(`音频${audioIndex}正在等待数据`);
+                statusElement.textContent = '正在缓冲...';
+            };
+            
+            audioElement.onstalled = () => {
+                console.log(`音频${audioIndex}数据获取被阻止`);
+                statusElement.textContent = '数据获取被阻止';
+            };
+            
+            audioElement.onsuspend = () => {
+                console.log(`音频${audioIndex}加载被暂停`);
+                statusElement.textContent = '加载被暂停';
+            };
+            
+            audioElement.onerror = (e) => {
+                console.error(`音频${audioIndex}播放出错:`, e);
+                statusElement.textContent = `播放错误: ${e.type}`;
+            };
+            
+            audioElement.onended = () => {
+                console.log(`音频${audioIndex}播放结束`);
+                statusElement.textContent = `播放完成 (${audioElement.duration.toFixed(1)}秒)`;
+            };
+        }
+    </script>
+</body>
+</html> 
