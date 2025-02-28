@@ -198,6 +198,9 @@
         })
         .catch(error => {
           console.error('第三个音频手动恢复播放失败:', error);
+          if (error.name === 'NotAllowedError') {
+            console.log('自动播放受限');
+          }
         });
     }
 
