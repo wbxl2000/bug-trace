@@ -90,6 +90,11 @@
     <main>
         <ul class="case-list">
             <li class="case-item">
+                <h2>(iOS) getUserMedia() cause wrong audio output</h2>
+                <p>In my web app, an MP3 is playing through the speaker. When I call getUserMedia() API to capture audio, the audio will correctly switcher to the earpiece — which is expected. However, after releasing the MediaStream(stop the audio track), this MP3 continues to play through the earpiece instead of switching back to the speaker.</p>
+                <a href="./ios-getUserMedia-cause-audio-wrong-output/index.html">View Case →</a>
+            </li>
+            <li class="case-item">
                 <h2>iOS getUserMedia() incorrectly emit 'devicechange' listener</h2>
                 <p>When I test getUserMedia() API in iOS, it incorrectly emit 'devicechange' listener.</p>
                 <a href="./ios-getUserMedia-incorrectly-emit-devicechange-listener/index.html">View Case →</a>

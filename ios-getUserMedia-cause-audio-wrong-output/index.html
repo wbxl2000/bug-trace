@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>(iOS) getUserMedia() cause wrong audio output</title>
+</head>
+
+<body>
+  <h1>(iOS) getUserMedia() cause wrong audio output</h1>
+  <p>
+    In my web app, an MP3 is playing through the speaker.
+    <br>
+    When I call getUserMedia() API to capture audio, the audio will correctly switcher to the earpiece — which is
+    expected.
+    <br>
+    <Strong>
+      However, after releasing the MediaStream(stop the audio track), this MP3 continues to play through the earpiece
+      instead of switching back to the speaker.
+    </Strong>
+  </p>
+  <p>
+    <strong>Environment:</strong> iPhone 15 Pro Max (iOS 18.5, Safari)<br>
+    <strong>Reference:</strong> <a href="https://bugs.webkit.org/show_bug.cgi?id=295889" target="_blank"
+      rel="noopener noreferrer">WebKit Bug #295889</a>
+  </p>
+  <h2>Reproduce the bug </h2>
+  <ol>
+    <li>Play the Music <br>
+      <audio id="audio" src="./qlx.mp3" loop controls></audio>
+    </li>
+    <li>Click the Request Audio Stream button(The Stream will release automatically)
+      <br>
+      <button onclick="requestAudioStream()">Request Audio Stream</button>
+    </li>
+    <li>The audio will be output to the earpiece and not discover the speaker</li>
+  </ol>
+</body>
+
+</html>
+
+<script>
+  async function requestAudioStream() {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true
+    });
+    stream.getTracks().forEach(track => track.stop());
+  }
+
+</script>
