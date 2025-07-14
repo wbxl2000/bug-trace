@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <script src="./trtc.js"></script>
+</head>
+
+<body>
+  <h1>getUserMedia() incorrectly emit 'devicechange' listener</h1>
+  <p>
+      When I test getUserMedia() API in iOS, it incorrectly emit 'devicechange' listener.
+      <br>
+      And I call getUserMedia() again in my web app, it will cause <strong>infinite</strong> 'devicechange' listener loop.
+      <br>
+      It's ok in Chrome or PC Browser.
+  </p>
+  <p>
+    <strong>Environment:</strong> iPhone 15 Pro Max (iOS 18.5, Safari)<br>
+    <strong>Reference:</strong> <a href="https://bugs.webkit.org/show_bug.cgi?id=283034" target="_blank" rel="noopener noreferrer">WebKit Bug #283034</a>
+</p>
+  <ol>
+    <li>Click the Request Audio Stream button
+      <button onclick="handleRequestAudioStream()">Request Audio Stream</button>
+    </li>
+    <li>The 'devicechange' listener will be triggered (I logged it below)</li>
+    <li>And also can test video stream
+      <button onclick="handleRequestVideoStream()">Request Video Stream</button>
+    </li>
+    <li>The 'devicechange' listener will be triggered too, but it's not infinite loop.</li>
+  </ol>
+  <ul id="log" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;"> 
+    Log Area
+  </ul>
+</body>
+
+</html>
+
+<script>
+  function handleRequestAudioStream() {
+    navigator.mediaDevices.addEventListener('devicechange', () => {
+      log('devicechange');
+      requestDevice();
+    });
+    async function requestDevice() {
+      log('log', 'getUserMedia');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => {
+        track.stop();
+      });
+    }
+    requestDevice();
+  }
+
+  function handleRequestVideoStream() {
+    navigator.mediaDevices.addEventListener('devicechange', () => {
+      log('devicechange');
+      requestDevice();
+    });
+    async function requestDevice() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach(track => {
+        track.stop();
+      });
+    }
+    requestDevice();
+  }
+
+  function log(message) {
+    const li = document.createElement('li');
+    li.textContent = message;
+    document.getElementById(id).appendChild(li);
+  }
+
+</script>
