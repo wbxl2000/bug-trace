@@ -19,7 +19,7 @@
   </p>
   <p>
     <strong>Environment:</strong> iPhone 15 Pro Max (iOS 18.5, Safari)<br>
-    <strong>Reference:</strong> <a href="https://bugs.webkit.org/show_bug.cgi?id=283034" target="_blank" rel="noopener noreferrer">WebKit Bug #283034</a>
+    <strong>Reference:</strong> <a href="https://bugs.webkit.org/show_bug.cgi?id=295888" target="_blank" rel="noopener noreferrer">WebKit Bug #295888</a>
 </p>
   <ol>
     <li>Click the Request Audio Stream button
@@ -41,11 +41,11 @@
 <script>
   function handleRequestAudioStream() {
     navigator.mediaDevices.addEventListener('devicechange', () => {
-      log('devicechange');
+      log('devicechange be triggered');
       requestDevice();
     });
     async function requestDevice() {
-      log('log', 'getUserMedia');
+      log('getUserMedia({ audio: true })');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach(track => {
         track.stop();
@@ -56,10 +56,11 @@
 
   function handleRequestVideoStream() {
     navigator.mediaDevices.addEventListener('devicechange', () => {
-      log('devicechange');
+      log('devicechange be triggered');
       requestDevice();
     });
     async function requestDevice() {
+      log('getUserMedia({ video: true })');
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       stream.getTracks().forEach(track => {
         track.stop();
@@ -71,7 +72,7 @@
   function log(message) {
     const li = document.createElement('li');
     li.textContent = message;
-    document.getElementById(id).appendChild(li);
+    document.getElementById('log').appendChild(li);
   }
 
 </script>
