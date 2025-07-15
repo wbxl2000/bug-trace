@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  Information
+  <ul>
+    <li> click start record button, wait for several seconds, then stop record button, the result video will show in current page, but the duration is not correct</li>
+    <li>Chrome 138.0.7204.101 (arm64)</li>
+    <li>Reference: https://issues.chromium.org/issues/40482588#comment96</li>
+  </ul>
+  <button onclick="startRecord()"> start record</button>
+  <button onclick="stopRecord()"> stop record</button>
+  <span id="duration">0</span>
+  <video id="video" autoplay></video>
+  <video id="video2"></video>
+</body>
+
+</html>
+
+<script>
+  const video = document.getElementById('video');
+  const video2 = document.getElementById('video2');
+  let mediaRecorder;
+  let chunks = [];
+  let intervalId = 0;
+  async function startRecord() {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+    video.srcObject = stream;
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+    let startTime = Date.now();
+    intervalId = setInterval(() => {
+      document.getElementById('duration').textContent = (Date.now() - startTime) / 1000 + 's';
+    }, 1000);
+    mediaRecorder.addEventListener('dataavailable', (event) => {
+      chunks.push(event.data);
+    });
+    mediaRecorder.addEventListener('stop', () => {
+      clearInterval(intervalId);
+      const blob = new Blob(chunks, { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      video2.src = url;
+      video2.controls = true;
+    });
+  }
+  function stopRecord() {
+    const stream = video.srcObject;
+    stream.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+  }
+</script>
+
+<script src="fixwebmduration.js"></script>
+<script>
+  var startTime;
+  let intervalToken;
+
+  function saveBlob(blob, duration) {
+    let filename = `ScreenRecording (${duration}ms)`;
+    const kb = Math.floor(blob.size / 1024);
+    filename = prompt(`What would you like to name the video file?\n(It is ${kb} kb)`, filename);
+    if (null === filename) {
+      return;
+    }
+    filename = filename + '.webm';
+    var elem = window.document.createElement('a');
+    elem.href = window.URL.createObjectURL(blob);
+    elem.download = filename;
+    document.body.appendChild(elem);
+    elem.click();
+    document.body.removeChild(elem);
+  }
+
+  function updateTimer() {
+    const sec = Math.floor((Date.now() - startTime) / 1000);   // TODO: Subtract out time while paused
+  }
+
+  async function startRecord2() {
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: "monitor" /*selfBrowserSurface: "include"*/ },
+        audio: false
+      });
+    } catch (e) {
+      console.error(e);
+      return;
+    }
+
+    var options;
+    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+      options = { mimeType: 'video/webm; codecs=vp9' };
+    } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+      options = { mimeType: 'video/webm; codecs=vp8' };
+    } else if (MediaRecorder.isTypeSupported('video/webm;codecs=H264')) {
+      options = { mimeType: 'video/webm;codecs=H264' };
+    } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+      options = { mimeType: 'video/mp4' };
+    } else {
+      alert('Sorry, Your browser does not seem to support VP9, VP8, or h264.');
+      return;
+    }
+    intervalToken = setInterval(updateTimer, 200);
+    recorder = new MediaRecorder(stream, options);
+
+    const chunks = [];
+    recorder.ondataavailable = e => { chunks.push(e.data); console.log('Got a data chunk.'); }
+
+    recorder.onstop = e => {
+      var duration = Date.now() - startTime;
+      stream.getVideoTracks()[0].stop();
+
+      clearInterval(intervalToken);
+
+      const blob = new Blob(chunks, { type: chunks[0].type });
+      console.log(blob);
+      saveBlob(blob, duration);
+      // ysFixWebmDuration(blob, duration, function (fixedBlob) {
+      //   saveBlob(fixedBlob, duration);
+      // });
+    };
+
+    recorder.start();
+    startTime = Date.now();
+  }
+
+  function stopRecord2() {
+    if (recorder) recorder.stop();
+  }
+</script>
