@@ -90,6 +90,11 @@
     <main>
         <ul class="case-list">
             <li class="case-item">
+                <h2>Chrome AAC buffered TimeRanges seek latency</h2>
+                <p>在 Chrome 139 中，AAC 音频在跳转（seek）时会出现较长加载，表现为 buffered[0].end 持续增长至目标时间点后才出声；M4A/MP3 通常在跳转后能较快补齐并发声。</p>
+                <a href="./chrome-aac-audio-file-had-bad-buffer-time-range/index.html">View Case →</a>
+            </li>
+            <li class="case-item">
                 <h2>Chrome MediaRecorder No Duration</h2>
                 <p>Click start record button, wait for several seconds, then stop record button, the result video will show in current page, but the duration is not correct</p>
                 <a href="./chrome-media-record-no-duration/index.html">View Case →</a>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <p style="font-size: 14px; color: #333; line-height: 1.6; max-width: 700px;">
+    本页用于对比三种音频文件（AAC / M4A / MP3）的缓冲与播放差异。
+    灰色为整段时长背景，红色表示已缓冲的时间段（对应 <code>audio.buffered</code>）。
+    下方文本会实时显示 <code>duration</code>、<code>currentTime</code> 以及各段缓冲区间。
+  </p>
+  <p style="font-size: 14px; color: #333; line-height: 1.6; max-width: 700px;">
+    <strong>已知问题</strong>：在 Chrome 139 中，AAC 文件在跳转（seek）时往往需要较长的加载时间，不能立即播放出声音。
+    具体表现为 <code>buffered[0].end</code> 会持续增长直至抵达跳转时间点；而 M4A / MP3 通常会在跳转后较快补齐目标时间点附近的缓冲并能立即发声。
+  </p>
+  <hr style="margin: 16px 0;" />
+  <p><strong>AAC</strong></p>
+  <p>
+    <audio id="audio-aac" controls preload="metadata" style="width: 100%; max-width: 700px;"></audio>
+  </p>
+  <p>
+    已缓冲的时间范围：
+    <canvas id="canvas-aac" width="700" height="20" style="width:100%; max-width: 700px; display:block;"></canvas>
+  </p>
+  <p>
+    <pre id="buffered-aac" style="white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; background: #f7f7f7; padding: 8px; border-radius: 6px; border: 1px solid #eee;"></pre>
+  </p>
+
+  <hr style="margin: 24px 0;" />
+
+  <p><strong>M4A</strong></p>
+  <p>
+    <audio id="audio-m4a" controls preload="metadata" style="width: 100%; max-width: 700px;"></audio>
+  </p>
+  <p>
+    已缓冲的时间范围：
+    <canvas id="canvas-m4a" width="700" height="20" style="width:100%; max-width: 700px; display:block;"></canvas>
+  </p>
+  <p>
+    <pre id="buffered-m4a" style="white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; background: #f7f7f7; padding: 8px; border-radius: 6px; border: 1px solid #eee;"></pre>
+  </p>
+
+  <hr style="margin: 24px 0;" />
+
+  <p><strong>MP3</strong></p>
+  <p>
+    <audio id="audio-mp3" controls preload="metadata" style="width: 100%; max-width: 700px;"></audio>
+  </p>
+  <p>
+    已缓冲的时间范围：
+    <canvas id="canvas-mp3" width="700" height="20" style="width:100%; max-width: 700px; display:block;"></canvas>
+  </p>
+  <p>
+    <pre id="buffered-mp3" style="white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; background: #f7f7f7; padding: 8px; border-radius: 6px; border: 1px solid #eee;"></pre>
+  </p>
+</body>
+<script>
+  window.onload = function() {
+    const configs = [
+      { id: 'aac', src: 'https://qer-im.oss-cn-shanghai.aliyuncs.com/Jay_and_Stefanie_Combined_50mb.aac' },
+      { id: 'm4a', src: 'https://qer-im.oss-cn-shanghai.aliyuncs.com/Jay_and_Stefanie_Combined_50mb.m4a' },
+      { id: 'mp3', src: 'https://qer-im.oss-cn-shanghai.aliyuncs.com/Jay_and_Stefanie_Combined_50mb.mp3' },
+    ];
+
+    function setupOne(id, src) {
+      const audio = document.getElementById(`audio-${id}`);
+      const canvas = document.getElementById(`canvas-${id}`);
+      const pre = document.getElementById(`buffered-${id}`);
+      const ctx = canvas.getContext('2d');
+      audio.src = src;
+
+      function renderBufferedText() {
+        const tr = audio.buffered;
+        let out = '';
+        out += `src: ${src}\n`;
+        out += `duration: ${isFinite(audio.duration) ? audio.duration.toFixed(3) : 'NaN'} s\n`;
+        out += `currentTime: ${isFinite(audio.currentTime) ? audio.currentTime.toFixed(3) : 'NaN'} s\n`;
+        out += `buffered.length: ${tr.length}\n`;
+        for (let i = 0; i < tr.length; i++) {
+          try {
+            out += `[${i}] start=${tr.start(i).toFixed(3)} end=${tr.end(i).toFixed(3)}\n`;
+          } catch (e) {}
+        }
+        pre.textContent = out;
+      }
+
+      function draw() {
+        renderBufferedText();
+        ctx.fillStyle = 'lightgray';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (!isFinite(audio.duration) || audio.duration <= 0) return;
+        ctx.fillStyle = 'red';
+        const inc = canvas.width / audio.duration;
+        for (let i = 0; i < audio.buffered.length; i++) {
+          const startX = audio.buffered.start(i) * inc;
+          const endX = audio.buffered.end(i) * inc;
+          const width = endX - startX;
+          ctx.fillRect(startX, 0, width, canvas.height);
+        }
+      }
+
+      draw();
+      audio.addEventListener('loadedmetadata', draw);
+      audio.addEventListener('progress', draw);
+      audio.addEventListener('seeked', draw);
+      audio.addEventListener('durationchange', draw);
+    }
+
+    configs.forEach(c => setupOne(c.id, c.src));
+  }
+</script>
+</html>
