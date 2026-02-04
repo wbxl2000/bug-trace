@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>webrtc-adapter localDescription null - v9.0.3 (original)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 12px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 { 
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+    }
+    .instruction {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 0;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      background: #f5f5f5;
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      text-decoration: none;
+      color: #333;
+      font-size: 0.9rem;
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab.active {
+      background: #fff;
+      border-bottom: 1px solid #fff;
+      margin-bottom: -1px;
+      font-weight: 600;
+    }
+    .tab:hover:not(.active) {
+      background: #eee;
+    }
+    .tab:active:not(.active) {
+      background: #ddd;
+    }
+    .content {
+      border: 1px solid #ddd;
+      border-radius: 0 6px 6px 6px;
+      padding: 12px;
+      background: #fff;
+      overflow-x: auto;
+    }
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      -webkit-overflow-scrolling: touch;
+    }
+    .success { color: #4ec9b0; }
+    .error { color: #f14c4c; }
+    .version-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+    .version-badge.bug { background: #fee; color: #c00; }
+    .version-badge.fixed { background: #efe; color: #080; }
+    
+    /* 移动端优化 */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      h1 {
+        font-size: 1.25rem;
+      }
+      .instruction {
+        padding: 10px;
+        font-size: 0.85rem;
+      }
+      .tabs {
+        flex-direction: column;
+      }
+      .tab {
+        border-radius: 6px 6px 0 0;
+        padding: 14px 12px;
+        font-size: 0.875rem;
+      }
+      .tab:first-child {
+        border-radius: 6px 6px 0 0;
+      }
+      .content {
+        padding: 10px;
+        border-radius: 0 0 6px 6px;
+      }
+      pre {
+        padding: 10px;
+        font-size: 0.8rem;
+      }
+      .version-badge {
+        font-size: 0.7rem;
+        padding: 2px 5px;
+        margin-left: 4px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.1rem;
+      }
+      .tab {
+        padding: 12px 10px;
+        font-size: 0.8rem;
+      }
+      .version-badge {
+        display: block;
+        margin: 4px 0 0 0;
+        width: fit-content;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>webrtc-adapter localDescription null</h1>
+  <div class="instruction">
+    <strong>Steps to reproduce:</strong> Open Chrome DevTools → Toggle device toolbar → Select iPhone/iPad → Refresh page
+  </div>
+
+  <div class="tabs">
+    <a href="./original.html" class="tab active">
+      v9.0.3 <span class="version-badge bug">has bug</span>
+    </a>
+    <a href="./fixed.html" class="tab">
+      v9.0.3-fixed <span class="version-badge fixed">patched</span>
+    </a>
+  </div>
+
+  <div class="content">
+    <pre id="output"></pre>
+  </div>
+
+  <script src="./adapter-9.0.3.js"></script>
+  <script>
+    const output = document.getElementById('output');
+
+    function log(msg, className) {
+      const span = document.createElement('span');
+      if (className) span.className = className;
+      span.textContent = msg + '\n';
+      output.appendChild(span);
+      console.log(msg);
+    }
+
+    log('browserDetails: ' + JSON.stringify(adapter.browserDetails));
+    log('');
+
+    try {
+      const pc = new RTCPeerConnection();
+      log('RTCPeerConnection created');
+
+      // This line throws error in iOS emulator + unfixed adapter:
+      // TypeError: Cannot read properties of null (reading 'type')
+      const desc = pc.localDescription;
+      log('localDescription: ' + desc);
+
+      pc.close();
+      log('');
+      log('✅ No error - adapter is fixed or not using OLD path', 'success');
+    } catch (e) {
+      log('');
+      log('❌ Error: ' + e.name + ': ' + e.message, 'error');
+      console.error(e);
+    }
+  </script>
+</body>
+</html>
