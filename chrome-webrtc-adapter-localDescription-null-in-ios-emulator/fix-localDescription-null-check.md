@@ -1,5 +1,10 @@
 # webrtc-adapter localDescription null 检查修复
 
+## 在线复现
+
+- **原版 (有 bug):** https://bug.qer.im/chrome-webrtc-adapter-localDescription-null-in-ios-emulator/original
+- **修复版:** https://bug.qer.im/chrome-webrtc-adapter-localDescription-null-in-ios-emulator/fixed
+
 ## 问题描述
 
 **错误信息：** `TypeError: Cannot read properties of null (reading 'type')`
@@ -155,6 +160,6 @@ Object.defineProperty(window.RTCPeerConnection.prototype, 'localDescription', {
 
 ## 仓库信息
 
-- Fork: https://github.com/user/adapter
+- Fork: https://github.com/wbxl2000/adapter
 - 分支: `fix-localDescription-null-check`
 - 基于版本: webrtc-adapter 9.0.3
