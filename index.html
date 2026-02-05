@@ -39,38 +39,43 @@
         .case-item a:hover {
             text-decoration: underline;
         }
-        
+        .case-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
         /* 移动端适配 */
         @media (max-width: 768px) {
             .case-list {
                 grid-template-columns: 1fr;
             }
         }
-        
+
         header {
             margin-bottom: 20px;
         }
-        
+
         header h1 {
             margin: 0;
             display: inline;
         }
-        
+
         header .github-link {
             color: #0066cc;
             text-decoration: none;
             font-size: 14px;
             margin-left: 15px;
         }
-        
+
         header .github-link:hover {
             text-decoration: underline;
         }
-        
+
         header p {
             margin: 10px 0 0 0;
         }
-        
+
         footer {
             margin-top: 40px;
             padding-top: 20px;
@@ -90,53 +95,66 @@
     <main>
         <ul class="case-list">
             <li class="case-item">
+                <div class="case-date">2026-02-04</div>
+                <h2>Chrome webrtc-adapter localDescription null in iOS Emulator</h2>
+                <p>When using Chrome DevTools with iPhone/iPad emulation, webrtc-adapter fails to parse the iOS UA string and falls back to the legacy shim path, causing "Cannot read properties of null" error when accessing localDescription.</p>
+                <a href="./chrome-webrtc-adapter-localDescription-null-in-ios-emulator/index.html">View Case →</a>
+            </li>
+
+            <li class="case-item">
+                <div class="case-date">2025-09-04</div>
                 <h2>Chrome AAC buffered TimeRanges seek latency</h2>
                 <p>在 Chrome 139 中，AAC 音频在跳转（seek）时会出现较长加载，表现为 buffered[0].end 持续增长至目标时间点后才出声；M4A/MP3 通常在跳转后能较快补齐并发声。</p>
                 <a href="./chrome-aac-audio-file-had-bad-buffer-time-range/index.html">View Case →</a>
             </li>
+
             <li class="case-item">
+                <div class="case-date">2025-07-15</div>
                 <h2>Chrome MediaRecorder No Duration</h2>
                 <p>Click start record button, wait for several seconds, then stop record button, the result video will show in current page, but the duration is not correct</p>
                 <a href="./chrome-media-record-no-duration/index.html">View Case →</a>
             </li>
+
             <li class="case-item">
+                <div class="case-date">2025-07-14</div>
                 <h2>(iOS) getUserMedia() cause wrong audio output</h2>
                 <p>In my web app, an MP3 is playing through the speaker. When I call getUserMedia() API to capture audio, the audio will correctly switcher to the earpiece — which is expected. However, after releasing the MediaStream(stop the audio track), this MP3 continues to play through the earpiece instead of switching back to the speaker.</p>
                 <a href="./ios-getUserMedia-cause-audio-wrong-output/index.html">View Case →</a>
             </li>
+
             <li class="case-item">
+                <div class="case-date">2025-07-14</div>
                 <h2>iOS getUserMedia() incorrectly emit 'devicechange' listener</h2>
                 <p>When I test getUserMedia() API in iOS, it incorrectly emit 'devicechange' listener.</p>
                 <a href="./ios-getUserMedia-incorrectly-emit-devicechange-listener/index.html">View Case →</a>
             </li>
-            <li class="case-item">
-                <h2>iOS Audio Choppy with PlaybackRate and AudioContext</h2>
-                <p>Audio becomes choppy when using playbackRate with AudioContext on iOS devices.</p>
-                <a href="./ios-audio-choppy-when-use-playbackRate-and-audio-context/index.html">View Case →</a>
-            </li>
 
             <li class="case-item">
-                <h2>iOS Microphone Capture Affects Bluetooth Headphone</h2>
-                <p>Capturing microphone on iOS causes Bluetooth headphone to stop working properly.</p>
-                <a href="./ios-capture-microphone-cause-bluetooth-headphone-not-working/index.html">View Case →</a>
-            </li>
-
-            <li class="case-item">
-                <h2>IQOO System Browser Audio Event Issue</h2>
-                <p>在IQOO系统浏览器中同时播放多个音频文件时，部分音频元素无法接收ontimeupdate事件。</p>
-                <a href="./iqoo-system-browser-play-music-error/index.html">View Case →</a>
-            </li>
-
-            <li class="case-item">
+                <div class="case-date">2025-02-25</div>
                 <h2>Android WeChat WebView Audio Silent Issue</h2>
                 <p>在安卓微信WebView中连续播放MP3音频文件时，到第三个音频时 play() 方法会一直处于 pending 状态，不会触发任何事件，但可通过用户手动点击恢复播放。</p>
                 <a href="./android-wechat-webview-audio-silent-on-third-play/index.html">View Case →</a>
             </li>
 
             <li class="case-item">
-                <h2>Chrome webrtc-adapter localDescription null in iOS Emulator</h2>
-                <p>When using Chrome DevTools with iPhone/iPad emulation, webrtc-adapter fails to parse the iOS UA string and falls back to the legacy shim path, causing "Cannot read properties of null" error when accessing localDescription.</p>
-                <a href="./chrome-webrtc-adapter-localDescription-null-in-ios-emulator/index.html">View Case →</a>
+                <div class="case-date">2024-12-27</div>
+                <h2>iOS Audio Choppy with PlaybackRate and AudioContext</h2>
+                <p>Audio becomes choppy when using playbackRate with AudioContext on iOS devices.</p>
+                <a href="./ios-audio-choppy-when-use-playbackRate-and-audio-context/index.html">View Case →</a>
+            </li>
+
+            <li class="case-item">
+                <div class="case-date">2024-12-27</div>
+                <h2>iOS Microphone Capture Affects Bluetooth Headphone</h2>
+                <p>Capturing microphone on iOS causes Bluetooth headphone to stop working properly.</p>
+                <a href="./ios-capture-microphone-cause-bluetooth-headphone-not-working/index.html">View Case →</a>
+            </li>
+
+            <li class="case-item">
+                <div class="case-date">2024-12-27</div>
+                <h2>IQOO System Browser Audio Event Issue</h2>
+                <p>在IQOO系统浏览器中同时播放多个音频文件时，部分音频元素无法接收ontimeupdate事件。</p>
+                <a href="./iqoo-system-browser-play-music-error/index.html">View Case →</a>
             </li>
         </ul>
     </main>
