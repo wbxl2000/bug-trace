@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Capture Microphone Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 20px; }
+        .controls { margin: 20px 0; }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fff;
+            margin-right: 10px;
+        }
+        button:active { background: #eee; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #stopBtn { display: none; }
+        .status-panel {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-row:last-child { border-bottom: none; }
+        .status-label { color: #555; }
+        .status-value { font-weight: 600; }
+        .status-success { color: #22863a; }
+        .status-error { color: #d73a49; }
+        .status-idle { color: #999; }
+        .status-live { color: #22863a; }
+        .status-ended { color: #d73a49; }
+        .status-muted { color: #e36209; }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>WebRTC Capture Microphone Demo</h1>
+            <p>演示使用 getUserMedia 采集麦克风，并在页面上展示采集状态和 AudioTrack 信息。</p>
+        </header>
+
+        <div class="controls">
+            <button id="startBtn" onclick="startCapture()">采集麦克风</button>
+            <button id="stopBtn" onclick="stopCapture()">停止采集</button>
+        </div>
+
+        <div class="status-panel">
+            <h3>状态信息</h3>
+            <div class="status-row">
+                <span class="status-label">采集状态</span>
+                <span id="captureStatus" class="status-value status-idle">未开始</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">错误信息</span>
+                <span id="errorMsg" class="status-value">-</span>
+            </div>
+        </div>
+
+        <div id="trackPanel" class="status-panel" style="display:none; margin-top: 12px;">
+            <h3>AudioTrack 信息</h3>
+            <div class="status-row">
+                <span class="status-label">Track ID</span>
+                <span id="trackId" class="status-value">-</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Label</span>
+                <span id="trackLabel" class="status-value">-</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">ReadyState</span>
+                <span id="trackState" class="status-value">-</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Muted</span>
+                <span id="trackMuted" class="status-value">-</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Enabled</span>
+                <span id="trackEnabled" class="status-value">-</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Settings</span>
+                <span id="trackSettings" class="status-value" style="font-size: 12px; word-break: break-all;">-</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentStream = null;
+        let stateTimer = null;
+
+        async function startCapture() {
+            const captureStatus = document.getElementById('captureStatus');
+            const errorMsg = document.getElementById('errorMsg');
+
+            captureStatus.textContent = '请求中...';
+            captureStatus.className = 'status-value status-idle';
+            errorMsg.textContent = '-';
+
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                captureStatus.textContent = '采集成功';
+                captureStatus.className = 'status-value status-success';
+
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').style.display = 'inline-block';
+
+                const track = currentStream.getAudioTracks()[0];
+                showTrackInfo(track);
+
+                track.addEventListener('ended', () => {
+                    updateTrackState(track);
+                });
+                track.addEventListener('mute', () => {
+                    updateTrackState(track);
+                });
+                track.addEventListener('unmute', () => {
+                    updateTrackState(track);
+                });
+
+                stateTimer = setInterval(() => updateTrackState(track), 1000);
+            } catch (error) {
+                captureStatus.textContent = '采集失败';
+                captureStatus.className = 'status-value status-error';
+                errorMsg.textContent = error.name + ': ' + error.message;
+                errorMsg.className = 'status-value status-error';
+            }
+        }
+
+        function showTrackInfo(track) {
+            document.getElementById('trackPanel').style.display = 'block';
+            document.getElementById('trackId').textContent = track.id;
+            document.getElementById('trackLabel').textContent = track.label || '(unknown)';
+            updateTrackState(track);
+        }
+
+        function updateTrackState(track) {
+            const stateEl = document.getElementById('trackState');
+            const mutedEl = document.getElementById('trackMuted');
+            const enabledEl = document.getElementById('trackEnabled');
+            const settingsEl = document.getElementById('trackSettings');
+
+            stateEl.textContent = track.readyState;
+            stateEl.className = 'status-value ' + (track.readyState === 'live' ? 'status-live' : 'status-ended');
+
+            mutedEl.textContent = track.muted ? 'Yes' : 'No';
+            mutedEl.className = 'status-value ' + (track.muted ? 'status-muted' : 'status-success');
+
+            enabledEl.textContent = track.enabled ? 'Yes' : 'No';
+            enabledEl.className = 'status-value ' + (track.enabled ? 'status-success' : 'status-error');
+
+            try {
+                const settings = track.getSettings();
+                settingsEl.textContent = JSON.stringify(settings);
+            } catch (e) {
+                settingsEl.textContent = '(unavailable)';
+            }
+        }
+
+        function stopCapture() {
+            if (stateTimer) {
+                clearInterval(stateTimer);
+                stateTimer = null;
+            }
+            if (currentStream) {
+                const track = currentStream.getAudioTracks()[0];
+                currentStream.getTracks().forEach(t => t.stop());
+                currentStream = null;
+                if (track) updateTrackState(track);
+            }
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').style.display = 'none';
+
+            const captureStatus = document.getElementById('captureStatus');
+            captureStatus.textContent = '已停止';
+            captureStatus.className = 'status-value status-idle';
+        }
+    </script>
+</body>
+</html>
